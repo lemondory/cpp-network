@@ -1,0 +1,11 @@
+# 로컬 의존성과 빌드 결과
+/third-party/
+/out/
+/build/
+/CMakeUserPresets.json
+/compile_commands.json
+.DS_Store
+.vs/
+.env
+.env.*
+!.env.example

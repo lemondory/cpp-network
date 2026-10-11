@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+include("${CMAKE_CURRENT_LIST_DIR}/CppNetworkAsio.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CppNetworkTargets.cmake")
+check_required_components(CppNetwork)

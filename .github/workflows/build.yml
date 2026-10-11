@@ -1,0 +1,71 @@
+name: Network build and tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  native:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, ubuntu-24.04, windows-2022]
+        config: [Debug, Release]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # 로컬 수동 설치와 같은 소스 커밋을 자동 검사 환경에 준비한다.
+      - uses: actions/checkout@v4
+        with:
+          repository: chriskohlhoff/asio
+          ref: 8806a6803cde7054c3049d3666d3ec36786568c5
+          path: third-party/asio
+          persist-credentials: false
+      - run: cmake -S . -B out/build -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+      - run: cmake --build out/build --config ${{ matrix.config }} --parallel 2
+      - run: ctest --test-dir out/build -C ${{ matrix.config }} --output-on-failure --no-tests=error --output-log out/build/ctest.log
+      - run: cmake --install out/build --config ${{ matrix.config }} --prefix "${{ github.workspace }}/out/install"
+      - run: cmake -S tests/consumer -B out/consumer -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install" -DCPP_NETWORK_ASIO_ROOT="${{ github.workspace }}/third-party/asio"
+      - run: cmake --build out/consumer --config ${{ matrix.config }} --parallel 2
+      - run: ctest --test-dir out/consumer -C ${{ matrix.config }} --output-on-failure --no-tests=error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: network-${{ matrix.os }}-${{ matrix.config }}
+          path: |
+            out/build/ctest.log
+            out/build/Testing/Temporary/LastTest.log
+            out/build/CMakeFiles/CMakeConfigureLog.yaml
+            out/consumer/Testing/Temporary/LastTest.log
+          retention-days: 7
+  sanitizer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, thread]
+    env:
+      UBSAN_OPTIONS: halt_on_error=1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: chriskohlhoff/asio
+          ref: 8806a6803cde7054c3049d3666d3ec36786568c5
+          path: third-party/asio
+          persist-credentials: false
+      - run: cmake -S . -B out/build -DCMAKE_BUILD_TYPE=Debug -DCPP_NETWORK_SANITIZER=${{ matrix.sanitizer }}
+      - run: cmake --build out/build --parallel 2
+      - run: ctest --test-dir out/build --output-on-failure --no-tests=error --output-log out/build/ctest.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: network-${{ matrix.sanitizer }}
+          path: out/build/Testing/Temporary/LastTest.log
+          retention-days: 7
+
+# UBSan(UndefinedBehaviorSanitizer): 정의되지 않은 동작을 검사하는 도구.

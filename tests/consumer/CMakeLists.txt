@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.25)
+project(NetworkConsumer LANGUAGES CXX)
+find_package(CppNetwork 0.1.0 EXACT CONFIG REQUIRED)
+add_executable(consumer main.cpp)
+target_link_libraries(consumer PRIVATE cpp_network::transport)
+enable_testing()
+add_test(NAME installed.roundtrip COMMAND consumer)
+set_tests_properties(installed.roundtrip PROPERTIES TIMEOUT 20)
