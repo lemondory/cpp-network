@@ -1,4 +1,22 @@
-# 첫 검증 기록
+# 검증 기록
+
+## 2026-11-21 연결 수락·접속
+
+`feature/accept-connect`의 Listener·Connector, 비동기 왕복 예제와 설치 소비자를 검사했다.
+
+| 구성 | 결과 |
+| --- | --- |
+| macOS Apple Clang 21 / Debug | CTest 21개 통과 |
+| macOS ASan + UBSan | CTest 21개 통과, UBSAN_OPTIONS=halt_on_error=1 |
+| macOS TSan | CTest 21개 통과 |
+| 설치 패키지 사용 프로젝트 | 독립 구성·빌드·실제 소켓 왕복 2개 통과 |
+| 원격 macOS·Linux·Windows | 기능 브랜치 게시 후 검증 예정 |
+
+새 검사는 접속 성공과 소유권 이전, 거절 후 새 시도, 기한을 지난 접속과 지연된 완료 처리, 시작 전후 취소, 수락 일시정지와 콜백 안 재개, 대기 accept 종료, 객체 파괴, 콜백 예외, 다중 스레드 중복 요청을 다룬다. 성능·전체 연결 수용량 검증은 후속 단계다.
+
+초기 커밋 `75f8f7d`는 [독립 CI](https://github.com/lemondory/cpp-network/actions/runs/44767756982)의 macOS·Ubuntu·Windows Debug/Release와 Linux ASan·TSan, 8개 구성에서 모두 통과했다. 아래 최초 기록의 원격 미실행 상태는 이 결과로 해소됐다.
+
+## 2026-10-11 최초 로컬 검증
 
 2026-10-11, 로컬 미커밋 작업 트리. 실제 서비스 성능·수용 연결 수·운영 준비 상태는 측정하지 않았다.
 
