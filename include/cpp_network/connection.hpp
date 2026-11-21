@@ -2,6 +2,8 @@
 
 #include <asio/ip/tcp.hpp>
 #include <cstddef>
+#include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <span>
@@ -16,7 +18,7 @@ struct Limits {
 };
 
 enum class SendResult { accepted, would_block, too_large, empty, closed };
-enum class CloseReason { local, peer, io_error, callback_error };
+enum class CloseReason { local, peer, io_error, callback_error, drained, drain_timeout };
 struct CloseInfo {
     CloseReason reason;
     std::error_code error;
@@ -25,6 +27,14 @@ struct Pending {
     std::size_t bytes;
     std::size_t messages;
 };
+enum class WriteStatus { written, cancelled, failed };
+struct WriteInfo {
+    std::uint64_t tag;
+    WriteStatus status;
+    // 로컬 쓰기 완료량이며 원격 수신·처리 확인이 아니다.
+    std::size_t bytes;
+    std::error_code error;
+};
 struct Callbacks {
     // 데이터는 호출 동안만 유효하다. false를 반환하면 다음 읽기를 중단한다.
     std::function<bool(std::span<const std::byte>)> on_bytes;
@@ -32,6 +42,8 @@ struct Callbacks {
     std::function<void(CloseInfo)> on_closed;
     // would_block 이후 공간이 줄어들면 통지한다. 재시도 성공을 보장하지 않는다.
     std::function<void()> on_writable;
+    // accepted 송신마다 한 번, 수락 순서대로 on_closed 전에 통지한다.
+    std::function<void(WriteInfo)> on_write{};
 };
 
 // 이미 연결된 소켓의 소유권을 받는다. 게임 규약·프레임 경계는 다루지 않는다.
@@ -40,6 +52,7 @@ struct Callbacks {
 // 실행 문맥은 이 객체보다 오래 살아야 한다. 종료 통지까지 실행을 계속해야 한다.
 class Connection {
 public:
+    using Clock = std::chrono::steady_clock;
     Connection(asio::ip::tcp::socket socket, Limits limits, Callbacks callbacks);
     ~Connection();
     Connection(Connection&&) noexcept;
@@ -49,10 +62,13 @@ public:
 
     void start();
     // start 전에도 대기열 수락은 가능하다. 수락은 원격 수신 성공을 뜻하지 않는다.
-    [[nodiscard]] SendResult send(std::span<const std::byte> bytes);
+    [[nodiscard]] SendResult send(std::span<const std::byte> bytes, std::uint64_t tag = 0);
     void resume();
     // 즉시 취소: 대기 송신을 버린다. 이미 전송한 바이트는 회수할 수 없다.
     void close();
+    // 새 송신·수신 전달을 막고 수락한 쓰기를 끝낸 뒤 종료한다. 기한은 절대 시각이다.
+    // start 전에도 가능하다. 중복 요청은 첫 기한을 유지하고 close는 즉시 취소한다.
+    void close_after_flush(Clock::time_point deadline);
     [[nodiscard]] Pending pending() const;
 
 private:

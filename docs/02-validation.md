@@ -1,5 +1,11 @@
 # 검증 기록
 
+## 2026-11-21 송신 완료·정상 종료
+
+`feature/drain-close`에서 로컬 쓰기 완료 통지와 기한이 있는 close_after_flush를 검사했다. macOS Debug·Release·ASan+UBSan·TSan에서 각각 CTest 31개를 통과했다. 설치 소비자 2개도 통과했으며 새 비동기 예제는 완료 바이트 수와 정상 종료 API를 함께 검사한다.
+
+송신 수락과 완료의 태그·순서·개수 일치, 미시작·진행 중 취소, 부분 쓰기, 정상 종료와 EOF, 빈 큐, 기한 초과, drain 중 파괴, 콜백 내 재송신, 콜백 예외, 쓰기 오류, 다중 producer의 송신·drain·즉시 종료 경쟁을 추가했다. 공개 원격 작업은 사용자 요청으로 보류했으며 이 기능의 Linux·Windows 검증은 아직 수행하지 않았다.
+
 ## 2026-11-21 연결 수락·접속
 
 `feature/accept-connect`의 Listener·Connector, 비동기 왕복 예제와 설치 소비자를 검사했다.
@@ -11,7 +17,7 @@
 | macOS ASan + UBSan | CTest 21개 통과, UBSAN_OPTIONS=halt_on_error=1 |
 | macOS TSan | CTest 21개 통과 |
 | 설치 패키지 사용 프로젝트 | 독립 구성·빌드·실제 소켓 왕복 2개 통과 |
-| 원격 macOS·Linux·Windows | 기능 브랜치 공개 게시 승인 대기, CI 미실행 |
+| 원격 macOS·Linux·Windows | 사용자 요청으로 공개 게시·CI 보류 |
 
 새 검사는 접속 성공과 소유권 이전, 거절 후 새 시도, 기한을 지난 접속과 지연된 완료 처리, 시작 전후 취소, 수락 일시정지와 콜백 안 재개, 대기 accept 종료, 객체 파괴, 콜백 예외, 다중 스레드 중복 요청을 다룬다. 성능·전체 연결 수용량 검증은 후속 단계다.
 

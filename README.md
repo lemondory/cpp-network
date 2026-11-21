@@ -2,7 +2,7 @@
 
 C++20과 **standalone Asio**로 구현하는 독립 네트워크 라이브러리입니다. 게임 메시지·인증·데이터베이스에 의존하지 않습니다.
 
-`Listener`의 비동기 연결 수락과 `Connector`의 기한·취소가 있는 접속 시도로 TCP 소켓을 준비하고, `Connection`으로 바이트를 송수신합니다. 송신 대기 바이트·항목 수 제한, 수신 중단·재개, 연결별 콜백 직렬화, 즉시 취소와 종료 완료 통지를 제공합니다. 전체 연결 관리와 대기 송신 후 종료는 후속 범위입니다.
+`Listener`의 비동기 연결 수락과 `Connector`의 기한·취소가 있는 접속 시도로 TCP 소켓을 준비하고, `Connection`으로 바이트를 송수신합니다. 송신 대기량 제한, 수신 중단·재개, 콜백 직렬화, 요청별 로컬 쓰기 완료와 기한이 있는 정상 종료를 제공합니다. 전체 연결 관리는 후속 범위입니다.
 
 ## 구조
 
@@ -63,7 +63,7 @@ ctest --test-dir out/consumer --output-on-failure --no-tests=error
 
 라이브러리 자체 코드와 설치 안내는 이 저장소에 커밋합니다. `third-party/`, `out/`, 기기별 `CMakeUserPresets.json`은 제외합니다. Asio는 자체 라이선스를 가진 외부 의존성이므로 그 배포본의 라이선스를 유지합니다.
 
-상세 동작은 [연결 송수신 계약](docs/01-connection-contract.md)과 [연결 수락·접속 계약](docs/03-establishment-contract.md)을 참고합니다. [네트워크 작업 순서](docs/04-network-plan.md)에 단계별 완료 기준과 브랜치를 기록합니다. 게임 통합·DB 드라이버·전투 메시지는 포함하지 않습니다.
+상세 동작은 [연결 송수신 계약](docs/01-connection-contract.md), [연결 수락·접속 계약](docs/03-establishment-contract.md), [송신 완료·정상 종료 계약](docs/05-drain-contract.md)을 참고합니다. [네트워크 작업 순서](docs/04-network-plan.md)에 단계별 완료 기준과 브랜치를 기록합니다. 게임 통합·DB 드라이버·전투 메시지는 포함하지 않습니다.
 
 <!-- TCP(Transmission Control Protocol): 순서 있는 신뢰성 바이트 스트림 전송 규약. -->
 <!-- DB(Database): 데이터베이스. GCC(GNU Compiler Collection): 컴파일러 도구 모음. -->

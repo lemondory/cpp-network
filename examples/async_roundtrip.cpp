@@ -14,6 +14,7 @@ int main() {
         n::Listener* listener_handle = nullptr;
         bool failed = false, listener_closed = false, connected = false;
         int closed = 0;
+        std::size_t written = 0;
         asio::steady_timer deadline(io, std::chrono::seconds(5));
         auto on_closed = [&](auto) { if (++closed == 2) deadline.cancel(); };
         n::Listener listener(io.get_executor(), {asio::ip::address_v4::loopback(), 0}, {}, {
@@ -22,7 +23,9 @@ int main() {
                     [&](auto bytes) {
                         if (server->send(bytes) != n::SendResult::accepted) { failed = true; server->close(); }
                         return true;
-                    }, on_closed, {}});
+                    }, on_closed, {}, [&](auto info) {
+                        if (info.status == n::WriteStatus::written) written += info.bytes;
+                    }});
                 server->start();
                 listener_handle->close(); // 한 연결만 받는다. 전달한 소켓은 계속 살아 있다.
                 return false;
@@ -38,9 +41,14 @@ int main() {
                 client = std::make_unique<n::Connection>(asio::ip::tcp::socket(std::move(*result.socket)), n::Limits{}, n::Callbacks{
                     [&](auto bytes) {
                         received.append(reinterpret_cast<const char*>(bytes.data()), bytes.size());
-                        if (received.size() >= message.size()) { client->close(); server->close(); }
+                        if (received.size() >= message.size()) {
+                            const auto due = n::Connection::Clock::now() + std::chrono::seconds(3);
+                            client->close_after_flush(due); server->close_after_flush(due);
+                        }
                         return true;
-                    }, on_closed, {}});
+                    }, on_closed, {}, [&](auto info) {
+                        if (info.status == n::WriteStatus::written) written += info.bytes;
+                    }});
                 client->start();
                 if (client->send(std::as_bytes(std::span(message))) != n::SendResult::accepted) {
                     failed = true; client->close();
@@ -55,7 +63,8 @@ int main() {
         });
         listener.start(); connector.start();
         io.run();
-        if (failed || !connected || !listener_closed || closed != 2 || received != message) return 1;
+        if (failed || !connected || !listener_closed || closed != 2 || received != message || written != message.size() * 2)
+            return 1;
         std::cout << received << '\n';
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }
