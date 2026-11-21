@@ -5,7 +5,7 @@
 | 단계 | 저장소·브랜치 | 완료 기준 | 상태 |
 | --- | --- | --- | --- |
 | N0 연결 송수신 | cpp-network / main의 초기 구현 | 바이트 송수신·대기량 제한·읽기 중단·즉시 종료, 3개 OS와 sanitizer 검사 | 완료 |
-| N1 연결 수락·접속 | cpp-network / feature/accept-connect | 비동기 accept/connect, 접속 기한·취소, 실패·파괴 시 정리, 설치 패키지 검증 | 구현·검증 중 |
+| N1 연결 수락·접속 | cpp-network / feature/accept-connect | 비동기 accept/connect, 접속 기한·취소, 실패·파괴 시 정리, 설치 패키지 검증 | 구현·로컬 검증 완료, 원격 검증 대기 |
 | N2 송신 완료·종료 | cpp-network / feature/drain-close | 로컬 쓰기 완료 통지, 새 송신 차단 후 drain, 종료 기한·강제 취소, 완료·취소 경쟁 검사 | 예정 |
 | N3 다중 연결 관리 | 게임 / feature/network-host | Listener 연결, 세션 등록·해제, 연결 수·총 대기량 제한, 수락 중단과 모든 연결의 종료 완료 | 예정 |
 | N4 다중 연결 검증 | 게임 / feature/network-load-validation | 느린 상대·접속 폭주·끊김·장시간 부하에서 상한·격리·정리 검증과 지표 기록 | 예정 |
