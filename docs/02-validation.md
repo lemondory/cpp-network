@@ -1,5 +1,15 @@
 # 검증 기록
 
+## 2026-11-22 원격 플랫폼 검증
+
+기능 브랜치를 원격에 게시하고 macOS·Ubuntu·Windows Debug/Release와 Linux ASan·TSan의 8개 구성을 검증했다.
+
+- 연결 수락·접속 `d1523ed`: [CI 8개 구성](https://github.com/lemondory/cpp-network/actions/runs/45032375183)에서 각각 21개 검사 통과.
+- 송신 완료·정상 종료 `66792b0`: [CI 8개 구성](https://github.com/lemondory/cpp-network/actions/runs/45032375124)에서 각각 31개 검사 통과.
+- 두 기능 모두 6개 일반 빌드 구성에서 설치 패키지 소비자 2개도 통과했다.
+
+아래 2026-11-21 기록의 원격 검증 보류 상태는 이 결과로 해소됐다. main 병합은 별도 단계다.
+
 ## 2026-11-21 송신 완료·정상 종료
 
 `feature/drain-close`에서 로컬 쓰기 완료 통지와 기한이 있는 close_after_flush를 검사했다. macOS Debug·Release·ASan+UBSan·TSan에서 각각 CTest 31개를 통과했다. 설치 소비자 2개도 통과했으며 새 비동기 예제는 완료 바이트 수와 정상 종료 API를 함께 검사한다.
